@@ -40,9 +40,11 @@ internal class KeyedQueryPagingSource<Key : Any, RowType : Any>(
 
   override fun getRefreshKey(state: PagingState<Key, RowType>): Key? {
     val boundaries = pageBoundaries ?: return null
-    val last = state.pages.lastOrNull() ?: return null
-    val keyIndexFromNext = last.nextKey?.let { boundaries.indexOf(it) - 1 }
-    val keyIndexFromPrev = last.prevKey?.let { boundaries.indexOf(it) + 1 }
+    val anchored = state.anchorPosition
+      ?.let { state.closestPageToPosition(it) }
+      ?: state.pages.lastOrNull() ?: return null
+    val keyIndexFromNext = anchored.nextKey?.let { boundaries.indexOf(it) - 1 }
+    val keyIndexFromPrev = anchored.prevKey?.let { boundaries.indexOf(it) + 1 }
     val keyIndex = keyIndexFromNext ?: keyIndexFromPrev ?: return null
 
     return boundaries.getOrNull(keyIndex)

@@ -16,6 +16,7 @@
 package app.cash.sqldelight.paging3
 
 import app.cash.paging.PagingConfig
+import app.cash.paging.PagingSourceLoadParamsAppend
 import app.cash.paging.PagingSourceLoadParamsRefresh
 import app.cash.paging.PagingSourceLoadResultPage
 import app.cash.paging.PagingState
@@ -141,6 +142,21 @@ abstract class BaseKeyedQueryPagingSourceTest : DbTest {
     )
 
     assertEquals(6L, refreshKey)
+  }
+
+  @Test fun invoking_getRefreshKey_with_anchor_far_from_end_returns_correct_result() = runDbTest {
+    val results1 = source.load(PagingSourceLoadParamsRefresh(key = 0L, loadSize = 3, false))
+    val results2 = source.load(PagingSourceLoadParamsAppend(key = 3L, loadSize = 3, false))
+    val refreshKey = source.getRefreshKey(
+      PagingState(
+        listOf(results1 as PagingSourceLoadResultPage<Long, Long>, results2 as PagingSourceLoadResultPage<Long, Long>),
+        0,
+        PagingConfig(3),
+        0,
+      )
+    )
+
+    assertEquals(0L, refreshKey)
   }
 
   private fun pageBoundaries(anchor: Long?, limit: Long): Query<Long> {
